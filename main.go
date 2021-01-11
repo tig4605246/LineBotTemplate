@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	
+	"time"
 
 	"github.com/line/line-bot-sdk-go/linebot"
 )
@@ -43,6 +43,7 @@ func main() {
 	port := os.Getenv("PORT")
 	addr := fmt.Sprintf(":%s", port)
 	http.ListenAndServe(addr, nil)
+	// time.Now()
 }
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +68,7 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					log.Println("Quota err:", err)
 				}
-				if message.Text == "Where"{
+				if message.Text == "Where" {
 					var where string
 					if now.Weekday()%2 == 1 {
 						where = "Today is Right"
@@ -77,12 +78,12 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.ID+":"+where+" OK! remain message:"+strconv.FormatInt(quota.Value, 10))).Do(); err != nil {
 						log.Print(err)
 					}
-				}else{
+				} else {
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.ID+":"+message.Text+" OK! remain message:"+strconv.FormatInt(quota.Value, 10))).Do(); err != nil {
 						log.Print(err)
 					}
 				}
-				
+
 			}
 		}
 	}
