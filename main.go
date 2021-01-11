@@ -75,7 +75,7 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 					} else {
 						where = "Today is Left"
 					}
-					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(where+)).Do(); err != nil {
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(where)).Do(); err != nil {
 						log.Print(err)
 					}
 				} else {
