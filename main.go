@@ -24,6 +24,16 @@ import (
 
 var bot *linebot.Client
 
+// const (
+// 	Sunday = iota
+// 	Monday
+// 	Tuesday
+// 	Wednesday
+// 	Thursday
+// 	Friday
+// 	Saturday
+// )
+
 func main() {
 	var err error
 	bot, err = linebot.New(os.Getenv("ChannelSecret"), os.Getenv("ChannelAccessToken"))
@@ -36,7 +46,9 @@ func main() {
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
 	events, err := bot.ParseRequest(r)
-
+	//init the loc
+	loc, _ := time.LoadLocation("Asia/Taipei")
+	now := time.Now().In(loc)
 	if err != nil {
 		if err == linebot.ErrInvalidSignature {
 			w.WriteHeader(400)
@@ -54,10 +66,25 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					log.Println("Quota err:", err)
 				}
-				if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.ID+":"+message.Text+" OK! remain message:"+strconv.FormatInt(quota.Value, 10))).Do(); err != nil {
-					log.Print(err)
+				if message.Text == "Where"{
+					var where string
+					if now.Weekday()%2 == 1 {
+						where = "Today is Right"
+					} else {
+						where = "Today is Left"
+					}
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.ID+":"+where+" OK! remain message:"+strconv.FormatInt(quota.Value, 10))).Do(); err != nil {
+						log.Print(err)
+					}
+				}else{
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.ID+":"+message.Text+" OK! remain message:"+strconv.FormatInt(quota.Value, 10))).Do(); err != nil {
+						log.Print(err)
+					}
 				}
+				
 			}
 		}
 	}
 }
+
+func get
