@@ -25,15 +25,11 @@ import (
 
 var bot *linebot.Client
 
-// const (
-// 	Sunday = iota
-// 	Monday
-// 	Tuesday
-// 	Wednesday
-// 	Thursday
-// 	Friday
-// 	Saturday
-// )
+var (
+	loc, _    = time.LoadLocation("Asia/Taipei")
+	startWeek = time.Now().In(loc).Weekday()
+	where     = "Today is Right"
+)
 
 func main() {
 	var err error
@@ -69,11 +65,13 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 					log.Println("Quota err:", err)
 				}
 				if message.Text == "Where" {
-					var where string
-					if now.Weekday()%2 == 1 {
-						where = "Today is Right"
-					} else {
-						where = "Today is Left"
+					if now.Weekday() != startWeek {
+						if where == "Today is Right" {
+							where = "Today is Right"
+						} else {
+							where = "Today is Left"
+						}
+						startWeek = now.Weekday()
 					}
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(where)).Do(); err != nil {
 						log.Print(err)
