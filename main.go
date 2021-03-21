@@ -13,6 +13,8 @@
 package main
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,17 +22,41 @@ import (
 	"strconv"
 	"time"
 
+	_ "github.com/lib/pq"
 	"github.com/line/line-bot-sdk-go/linebot"
 )
 
 var bot *linebot.Client
 
 var (
-	loc, _    = time.LoadLocation("Asia/Taipei")
-	startWeek = time.Now().In(loc).Weekday()
-	where     = "Today is Right"
+	loc, _ = time.LoadLocation("Asia/Taipei")
+	sqlObj = SqlDoc{
+		Host:   "localhost",
+		Port:   5432,
+		User:   os.Getenv("db_user"),
+		Pass:   os.Getenv("db_pass"),
+		DbName: "postgres",
+	}
 )
 
+type SqlDoc struct {
+	Host   string
+	Port   int
+	User   string
+	Pass   string
+	DbName string
+	Client *sql.DB
+}
+
+type DayInfo struct {
+	Serial int
+	Pos    string
+	Day    string
+}
+
+func init() {
+	sqlObj.init()
+}
 func main() {
 	var err error
 	bot, err = linebot.New(os.Getenv("ChannelSecret"), os.Getenv("ChannelAccessToken"))
@@ -43,10 +69,9 @@ func main() {
 }
 
 func callbackHandler(w http.ResponseWriter, r *http.Request) {
+	var position string
+	var err error
 	events, err := bot.ParseRequest(r)
-	//init the loc
-	loc, _ := time.LoadLocation("Asia/Taipei")
-	now := time.Now().In(loc)
 	if err != nil {
 		if err == linebot.ErrInvalidSignature {
 			w.WriteHeader(400)
@@ -65,15 +90,14 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 					log.Println("Quota err:", err)
 				}
 				if message.Text == "Where" {
-					if now.Weekday() != startWeek {
-						if where == "Today is Right" {
-							where = "Today is Right"
-						} else {
-							where = "Today is Left"
-						}
-						startWeek = now.Weekday()
+
+					position, err = sqlObj.queryTarget()
+					if err != nil {
+						sqlObj.insertToday(position)
+						position, _ = sqlObj.queryTarget()
 					}
-					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(where)).Do(); err != nil {
+					reply := "Today is " + position
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(reply)).Do(); err != nil {
 						log.Print(err)
 					}
 				} else {
@@ -85,4 +109,51 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+}
+
+func (s *SqlDoc) init() {
+	var err error
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		s.Host, s.Port, s.User, s.Pass, s.DbName)
+	s.Client, err = sql.Open("postgres", psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *SqlDoc) insertToday(oldPos string) {
+	var newPos string
+	sqlStatement := `
+INSERT INTO injection (position, day)
+VALUES ($1, $2)`
+	if oldPos == "right" {
+		newPos = "left"
+	} else {
+		newPos = "right"
+	}
+	_, err := s.Client.Exec(sqlStatement, newPos, time.Now().In(loc).String())
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *SqlDoc) queryTarget() (string, error) {
+	info := DayInfo{}
+	sqlStatement := `SELECT * FROM injection WHERE day=$1`
+	// Get current date time
+	today := time.Now().In(loc).String()
+	row := s.Client.QueryRow(sqlStatement, today[:10])
+	err := row.Scan(&info.Serial, &info.Pos, &info.Day)
+	switch err {
+	case sql.ErrNoRows:
+		fmt.Println("No rows were returned! A new row should be created")
+		return info.Pos, errors.New("should create today's record")
+	case nil:
+		fmt.Println(info.Pos, info.Day[:10])
+		return info.Pos, nil
+	default:
+		panic(err)
+	}
+	return "", nil
 }
