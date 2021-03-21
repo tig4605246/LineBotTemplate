@@ -1,5 +1,8 @@
+# github.com/lib/pq v1.10.0
+## explicit
+github.com/lib/pq
+github.com/lib/pq/oid
+github.com/lib/pq/scram
 # github.com/line/line-bot-sdk-go v7.7.0+incompatible
 ## explicit
 github.com/line/line-bot-sdk-go/linebot
-# golang.org/x/net v0.0.0-20161109213706-9ef22118a4b2
-## explicit
