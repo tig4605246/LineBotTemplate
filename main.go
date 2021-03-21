@@ -114,6 +114,11 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(reply)).Do(); err != nil {
 						log.Print(err)
 					}
+				} else if message.Text == "status" {
+
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(sqlObj.testCon())).Do(); err != nil {
+						log.Print(err)
+					}
 				} else {
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.ID+":"+message.Text+" OK! remain message:"+strconv.FormatInt(quota.Value, 10))).Do(); err != nil {
 						log.Print(err)
@@ -174,4 +179,12 @@ func (s *SqlDoc) queryTarget() (string, error) {
 		panic(err)
 	}
 	return "", nil
+}
+
+func (s *SqlDoc) testCon() string {
+	err := s.Client.Ping()
+	if err != nil {
+		panic(err)
+	}
+	return "Successfully connected!"
 }
