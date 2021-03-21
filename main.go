@@ -162,6 +162,9 @@ func (s *SqlDoc) queryTarget() (string, error) {
 	switch err {
 	case sql.ErrNoRows:
 		fmt.Println("No rows were returned! A new row should be created")
+		yesterday := time.Now().In(loc).Add(-24 * time.Hour).String()
+		row := s.Client.QueryRow(sqlStatement, yesterday[:10])
+		_ = row.Scan(&info.Serial, &info.Pos, &info.Day)
 		return info.Pos, errors.New("should create today's record")
 	case nil:
 		fmt.Println(info.Pos, info.Day[:10])
