@@ -146,7 +146,8 @@ VALUES ($1, $2)`
 	} else {
 		newPos = "right"
 	}
-	_, err := s.Client.Exec(sqlStatement, newPos, time.Now().In(loc).String())
+	today := time.Now().In(loc).String()
+	_, err := s.Client.Exec(sqlStatement, newPos, today[:10])
 	if err != nil {
 		panic(err)
 	}
