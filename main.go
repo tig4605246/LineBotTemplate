@@ -100,6 +100,20 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(reply)).Do(); err != nil {
 						log.Print(err)
 					}
+				} else if message.Text == "Debug:Where" {
+
+					position, err = sqlObj.queryTarget()
+					bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("Done querying err:"+err.Error())).Do()
+					if err != nil {
+						sqlObj.insertToday(position)
+						bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("Done inserting err:"+err.Error())).Do()
+						position, _ = sqlObj.queryTarget()
+						bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage("Done post querying err:"+err.Error())).Do()
+					}
+					reply := "Today is " + position
+					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(reply)).Do(); err != nil {
+						log.Print(err)
+					}
 				} else {
 					if _, err = bot.ReplyMessage(event.ReplyToken, linebot.NewTextMessage(message.ID+":"+message.Text+" OK! remain message:"+strconv.FormatInt(quota.Value, 10))).Do(); err != nil {
 						log.Print(err)
