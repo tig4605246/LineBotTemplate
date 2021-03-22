@@ -178,13 +178,13 @@ func (s *SqlDoc) queryTarget() (string, error) {
 	default:
 		panic(err)
 	}
-	return "", nil
+	//return "", nil
 }
 
 func (s *SqlDoc) testCon() string {
 	err := s.Client.Ping()
 	if err != nil {
-		panic(err)
+		return err.Error()
 	}
 	return "Successfully connected!"
 }
