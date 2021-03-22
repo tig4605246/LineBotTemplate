@@ -31,7 +31,7 @@ var bot *linebot.Client
 var (
 	loc, _ = time.LoadLocation("Asia/Taipei")
 	sqlObj = SqlDoc{
-		Host:   "localhost",
+		Host:   os.Getenv("DATABASE_URL"),
 		Port:   5432,
 		User:   os.Getenv("db_user"),
 		Pass:   os.Getenv("db_pass"),
