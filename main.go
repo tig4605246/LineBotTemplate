@@ -132,10 +132,10 @@ func callbackHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *SqlDoc) init() {
 	var err error
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		s.Host, s.Port, s.User, s.Pass, s.DbName)
-	s.Client, err = sql.Open("postgres", psqlInfo)
+	// psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+	// 	"password=%s dbname=%s sslmode=disable",
+	// 	s.Host, s.Port, s.User, s.Pass, s.DbName)
+	s.Client, err = sql.Open("postgres", s.Host)
 	if err != nil {
 		panic(err)
 	}
